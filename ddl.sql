@@ -20,7 +20,7 @@ CREATE TABLE friend_requests (
     made_for INT NOT NULL,
     date_created DATETIME NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'Pending',
-    date_reviewed DATETIME NOT NULL,
+    date_reviewed DATETIME DEFAULT NULL,
     CONSTRAINT made_by_user_fk FOREIGN KEY (made_by) REFERENCES users(id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT made_for_user_fk FOREIGN KEY (made_for) REFERENCES users(id)

@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Dashboard
+{% endblock %}
+
+{% block main %}
+    <h2 class="mb-4">Your Friends</h2>
+
+    {% if friends %}
+        <table class="table table-bordered w-auto mx-auto">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for friend in friends %}
+                    <tr>
+                        <td>{{ friend.name }}</td>
+                        <td>{{ friend.username }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no friends yet.</p>
+    {% endif %}
+{% endblock %}

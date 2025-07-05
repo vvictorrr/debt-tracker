@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Dashboard
+{% endblock %}
+
+{% block main %}
+    <h2>Send a Friend Request</h2>
+
+    <form action="{{ url_for('send_friend_request') }}" method="POST">
+        <label for="username">Search by Username:</label>
+        <input type="text" id="username" name="username" required>
+
+        <button type="submit">Send Friend Request</button>
+    </form>
+    <h2 class="mb-4">Incoming Requests</h2>
+
+    {% if incoming %}
+        <table class="table table-bordered w-auto mx-auto">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rq in incoming %}
+                    <tr>
+                        <td>{{ rq.name }}</td>
+                        <td>{{ rq.username }}</td>
+                        <td>
+                            <form action="{{ url_for('respond_request') }}" method="post" class="d-inline">
+                                <input type="hidden" name="request" value="{{ rq.request_id }}">
+                                <button name="action" value="accept" class="btn btn-success btn-sm">Accept</button>
+                            </form>
+                            <form action="{{ url_for('respond_request') }}" method="post" class="d-inline">
+                                <input type="hidden" name="request" value="{{ rq.request_id }}">
+                                <button name="action" value="deny" class="btn btn-danger btn-sm">Deny</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no incoming requests.</p>
+    {% endif %}
+
+    <h2 class="mb-4">Pending Outgoing Requests</h2>
+
+    {% if pending %}
+        <table class="table table-bordered w-auto mx-auto">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Username</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rq in pending %}
+                    <tr>
+                        <td>{{ rq.name }}</td>
+                        <td>{{ rq.username }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no pending requests.</p>
+    {% endif %}
+{% endblock %}
