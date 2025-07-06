@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Log Payment
+{% endblock %}
+
+{% block main %}
+<div class="container" style="max-width: 700px;">
+    <h2 class="mb-4">Log a Payment</h2>
+    <form id="payment-form" action="/payment" method="POST">
+        <div class="mb-3">
+            <label for="total" class="form-label">Total Paid</label>
+            <input type="number" class="form-control" name="total" step="0.01" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <input type="text" class="form-control" name="description" maxlength="200" required>
+        </div>
+
+        <div class="mb-3">
+            <h4>Selected Friends</h4>
+            <ul id="selected-friends" class="list-unstyled"></ul>
+        </div>
+
+        <div class="mb-3">
+            <h4>All Friends</h4>
+            <ul id="available-friends" class="list-unstyled">
+                {% for friend in friends %}
+                <li class="border rounded p-2 mb-2 d-flex justify-content-between align-items-center" data-id="{{ friend.id }}" data-name="{{ friend.name }}" data-username="{{ friend.username }}">
+                    <span>{{ friend.name }} ({{ friend.username }})</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <button type="button" id="show-more-btn" class="btn btn-outline-secondary btn-sm">Show More</button>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Log Payment</button>
+    </form>
+
+    <h2 class="mb-4">Past Payments</h2>
+    
+    {% if past_payments%}
+        <table class="table table-bordered w-auto mx-auto">
+            <thead class="table-light">
+                <tr>
+                    <th>Paid By</th>
+                    <th>Total</th>
+                    <th>You Owed</th>
+                    <th>Description</th>
+                    <th>Paid On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in past_payments %}
+                    <tr>
+                        <td>{{ p.paid_by }}</td>
+                        <td>{{ p.total }}</td>
+                        <td>{{ p.you_owed }}</td>
+                        <td>{{ p.description }}</td>
+                        <td>{{ p.date_paid }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>You have no incoming requests.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

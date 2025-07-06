@@ -279,7 +279,7 @@ def send_friend_request():
                     (%s, %s, NOW());
             """,(user_id, friend_id))
             conn.commit()
-            conn.close()
+            close_resources(conn, cur)
             flash("Friend request sent!", "success")
         except mysql.connector.Error as err:
             close_resources(conn, cur)
@@ -288,6 +288,100 @@ def send_friend_request():
         flash("Database connection failed", "danger")
     return redirect(url_for('add'))
 
+@app.route('/payment', methods=['GET', 'POST'])
+def payment():
+    user_id = session.get('user_id')
+    conn = get_db_connection()
+    if conn:
+        cur = conn.cursor(dictionary=True)
+
+        if request.method == 'GET':
+            try:
+                # Fetch friends for selection
+                cur.execute("""
+                    SELECT * FROM (
+                    SELECT u.id, u.name, u.username FROM users AS u
+                        INNER JOIN friends AS f ON u.id = f.friend2
+                        WHERE f.friend1 = %s
+                    UNION ALL
+                    SELECT u2.id, u2.name, u2.username FROM users AS u2
+                        INNER JOIN friends AS f2 ON u2.id = f2.friend1
+                        WHERE f2.friend2 = %s) AS all_friends
+                    ORDER BY name;
+                """, (user_id, user_id))
+                friends = cur.fetchall()
+
+                #past payments
+                cur.execute("""
+                    SELECT p.payment_id, 'You' AS paid_by, p.total, 0.0 AS you_owed, p.description, p.date_paid
+                        FROM payments p
+                        WHERE p.paid_by = %s
+                    UNION
+                    SELECT p.payment_id, CONCAT(u.name, ' (', u.username, ')'), p.total, d.amount_owed, p.description, p.date_paid
+                        FROM payments p
+                            INNER JOIN debts d ON p.payment_id = d.payment
+                            INNER JOIN users AS u ON p.paid_by = u.id
+                        WHERE d.debtor = %s;
+                    """, (user_id, user_id))
+                
+                past_payments = cur.fetchall()
+                close_resources(conn, cur)
+            except mysql.connector.Error as err:
+                flash(str(err), 'danger')
+                friends = []
+                close_resources(conn, cur)
+            return render_template('payment.html', friends=friends, past_payments=past_payments)
+        elif request.method == 'POST':
+            total = request.form.get('total', type=float)
+            description = request.form.get('description', '').strip()
+            debts = []
+            sum_debts = 0.0
+            # Collect debts from form inputs
+            for key, val in request.form.items():
+                if key.startswith('debtor_'):
+                    debtor_id = int(key.split('_')[1])
+                    try:
+                        amount = float(val)
+                    except (TypeError, ValueError):
+                        amount = 0.0
+                    if amount > 0:
+                        debts.append((debtor_id, amount))
+                        sum_debts += amount
+            
+            if round(sum_debts, 2) > round(total, 2):
+                close_resources(conn, cur)
+                flash('Debtors cannot owe more than the total paid.', 'danger')
+                return redirect(url_for('payment'))
+
+            try:
+                # Insert into payments
+                cur.execute(
+                    "INSERT INTO payments (paid_by, date_paid, total, description)"
+                    " VALUES (%s, NOW(), %s, %s)",
+                    (user_id, total, description)
+                )
+                conn.commit()
+                payment_id = cur.lastrowid
+
+                # Insert each debt record
+                for debtor_id, amount in debts:
+                    cur.execute(
+                        "INSERT INTO debts (payment, debtor, amount_owed) VALUES (%s, %s, %s)",
+                        (payment_id, debtor_id, amount)
+                    )
+                conn.commit()
+                close_resources(conn, cur)
+                flash('Payment and debts logged successfully!', 'success')
+            except mysql.connector.Error as err:
+                conn.rollback()
+                flash(str(err), 'danger')
+                close_resources(conn, cur)
+            return redirect(url_for('payment'))
+        else:
+            close_resources(conn, cur)
+            return 'Method Not Allowed', 405
+    else:
+        flash('Database connection failed', 'danger')
 
 if __name__ == '__main__':
     app.run(debug=True)
