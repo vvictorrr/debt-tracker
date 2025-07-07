@@ -79,4 +79,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initCutoff();
+    //Past payments
+    let visibleCount = threshold;
+
+    const rows = Array.from(document.querySelectorAll(".payment-row"));
+    const showMoreBtn2 = document.getElementById("show-more-payments");
+    const showLessBtn = document.getElementById("show-less-payments");
+
+    function updateTableDisplay() {
+        rows.forEach((row, index) => {
+            row.style.display = index < visibleCount ? "" : "none";
+        });
+
+        if (showMoreBtn2) {
+            showMoreBtn2.style.display = visibleCount < rows.length ? "inline-block" : "none";
+        }
+        if (showLessBtn) {
+            showLessBtn.style.display = visibleCount > threshold ? "inline-block" : "none";
+        }
+    }
+
+    if (showMoreBtn2 && showLessBtn && rows.length > 0) {
+        showMoreBtn2.addEventListener("click", () => {
+            visibleCount = Math.min(visibleCount + threshold, rows.length);
+            updateTableDisplay();
+        });
+
+        showLessBtn.addEventListener("click", () => {
+            visibleCount = Math.max(threshold, visibleCount - threshold);
+            updateTableDisplay();
+        });
+
+        updateTableDisplay(); // initialize
+    }
 });

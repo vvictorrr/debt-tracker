@@ -146,17 +146,14 @@ def dashboard():
         try:
             cur = conn.cursor(dictionary=True)
             cur.execute("""
-                SELECT * FROM (
-                SELECT u.name, u.username FROM users AS u
-                    INNER JOIN friends AS f ON u.id = f.friend2
-                    WHERE f.friend1 = %s
-                UNION ALL
-                SELECT u2.name, u2.username FROM users AS u2
-                    INNER JOIN friends AS f2 ON u2.id = f2.friend1
-                    WHERE f2.friend2 = %s) AS all_friends
-                ORDER BY name;
+                SELECT u.id, u.name, u.username, f1.owes AS you_owe, f2.owes AS they_owe_you
+                    FROM users AS u
+                        INNER JOIN friends AS f1 ON u.id = f1.friend2 AND f1.friend1 = %s
+                        LEFT JOIN friends AS f2 ON f2.friend1 = u.id AND f2.friend2 = %s
+                    ORDER BY u.name;
             """, (user_id, user_id))
             friends_list = cur.fetchall()
+
             close_resources(conn, cur)
             return render_template("dashboard.html", friends=friends_list)
         except mysql.connector.Error as err:
@@ -165,6 +162,79 @@ def dashboard():
     else:
         flash("Database connection failed", "danger")
     return render_template("dashboard.html")
+
+@app.route("/pay_off", methods=["POST"])
+def pay_off():
+    user_id = session.get("user_id")
+    friend_id = request.form.get("friend_id")
+
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                UPDATE friends SET owes = 0
+                WHERE friend1 = %s AND friend2 = %s
+            """, (user_id, friend_id))
+            conn.commit()
+            close_resources(conn, cur)
+            flash("Debt paid off!", "success")
+        except mysql.connector.Error as err:
+            flash(str(err), "danger")
+            close_resources(conn, cur)
+    else:
+        flash("Database connection failed.", "danger")
+
+    return redirect(url_for("dashboard"))
+
+@app.route("/forgive_debt", methods=["POST"])
+def forgive_debt():
+    user_id = session.get("user_id")
+    friend_id = request.form.get("friend_id")
+    amount = request.form.get("amount")
+
+    try:
+        amount = float(amount)
+        if amount <= 0:
+            flash("Amount must be positive.", "warning")
+            return redirect(url_for("dashboard"))
+    except ValueError:
+        flash("Invalid amount.", "danger")
+        return redirect(url_for("dashboard"))
+
+    conn = get_db_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            # Fetch how much they currently owe
+            cur.execute("""
+                SELECT owes FROM friends WHERE friend1 = %s AND friend2 = %s
+            """, (friend_id, user_id))
+            result = cur.fetchone()
+
+            if not result:
+                flash("No debt to forgive.", "warning")
+            else:
+                current_owed = result[0]
+                if amount > current_owed:
+                    flash(f"You can't forgive more than the current debt (${current_owed:.2f}).", "danger")
+                else:
+                    new_amount = max(0.0, current_owed - amount)
+                    cur.execute("""
+                        UPDATE friends SET owes = %s
+                        WHERE friend1 = %s AND friend2 = %s
+                    """, (new_amount, friend_id, user_id))
+                    conn.commit()
+                    flash(f"Forgave ${min(current_owed, amount):.2f}.", "success")
+
+        except mysql.connector.Error as err:
+            flash(str(err), "danger")
+        finally:
+            close_resources(conn, cur)
+    else:
+        flash("Database connection failed.", "danger")
+
+    return redirect(url_for("dashboard"))
 
 @app.route("/add")
 def add():
@@ -198,7 +268,7 @@ def add():
     return render_template("add.html")
 
 @app.route("/respond_request", methods=['POST'])
-def respond():
+def respond_request():
     user_id = session["user_id"]
     request_id = request.form.get("request")
     action = request.form.get("action")
@@ -216,6 +286,9 @@ def respond():
                 cur.execute("""
                     INSERT INTO friends (friend1, friend2) VALUES (%s, %s);
                 """, (user_id, from_user))
+                cur.execute("""
+                    INSERT INTO friends (friend1, friend2) VALUES (%s, %s);
+                """, (from_user, user_id))
                 #update request
                 cur.execute("""
                     UPDATE friend_requests SET status = 'Approved', date_reviewed = NOW() WHERE request_id = %s;
@@ -259,8 +332,7 @@ def send_friend_request():
             cur.execute("""
                 SELECT 1 FROM friends
                     WHERE (friend1 = %s AND friend2 = %s)
-                    OR (friend1 = %s AND friend2 = %s)
-            """, (user_id, friend_id, friend_id, user_id))
+            """, (user_id, friend_id))
             if cur.fetchone():
                 flash("Friend already exists.", "danger")
                 return redirect(url_for("add"))
@@ -299,29 +371,26 @@ def payment():
             try:
                 # Fetch friends for selection
                 cur.execute("""
-                    SELECT * FROM (
                     SELECT u.id, u.name, u.username FROM users AS u
                         INNER JOIN friends AS f ON u.id = f.friend2
                         WHERE f.friend1 = %s
-                    UNION ALL
-                    SELECT u2.id, u2.name, u2.username FROM users AS u2
-                        INNER JOIN friends AS f2 ON u2.id = f2.friend1
-                        WHERE f2.friend2 = %s) AS all_friends
-                    ORDER BY name;
-                """, (user_id, user_id))
+                    ORDER BY u.name;
+                """, (user_id,))
                 friends = cur.fetchall()
 
                 #past payments
                 cur.execute("""
-                    SELECT p.payment_id, 'You' AS paid_by, p.total, 0.0 AS you_owed, p.description, p.date_paid
-                        FROM payments p
-                        WHERE p.paid_by = %s
-                    UNION
-                    SELECT p.payment_id, CONCAT(u.name, ' (', u.username, ')'), p.total, d.amount_owed, p.description, p.date_paid
-                        FROM payments p
-                            INNER JOIN debts d ON p.payment_id = d.payment
-                            INNER JOIN users AS u ON p.paid_by = u.id
-                        WHERE d.debtor = %s;
+                    SELECT * FROM (
+                        SELECT p.payment_id, 'You' AS paid_by, p.total, 0.0 AS you_owed, p.description, p.date_paid
+                            FROM payments p
+                            WHERE p.paid_by = %s
+                        UNION
+                        SELECT p.payment_id, CONCAT(u.name, ' (', u.username, ')'), p.total, d.amount_owed, p.description, p.date_paid
+                            FROM payments p
+                                INNER JOIN debts d ON p.payment_id = d.payment
+                                INNER JOIN users AS u ON p.paid_by = u.id
+                            WHERE d.debtor = %s) AS all_payments
+                    ORDER BY date_paid DESC;
                     """, (user_id, user_id))
                 
                 past_payments = cur.fetchall()
@@ -369,6 +438,80 @@ def payment():
                         "INSERT INTO debts (payment, debtor, amount_owed) VALUES (%s, %s, %s)",
                         (payment_id, debtor_id, amount)
                     )
+
+                #debtor OWES payer
+                #Update running debts
+                cur.execute(""" SELECT * FROM friends """)
+                all_debts = cur.fetchall()
+                debt_map = {(row["friend1"], row["friend2"]): row["owes"] for row in all_debts}
+
+                #cancel overlapping
+                for debtor_id, amount in debts:
+                    user_owes = debt_map.get((user_id, debtor_id), 0.0)
+                    if user_owes >= amount:
+                        cur.execute("""
+                            UPDATE friends SET owes = %s
+                            WHERE friend1 = %s AND friend2 = %s
+                        """, (user_owes - amount, user_id, debtor_id))
+                    else:
+                        cur.execute("""
+                            UPDATE friends SET owes = %s
+                            WHERE friend1 = %s AND friend2 = %s
+                        """, (0.0, user_id, debtor_id))
+                        cur.execute("""
+                            UPDATE friends SET owes = %s
+                            WHERE friend1 = %s AND friend2 = %s
+                        """, (amount - user_owes, debtor_id, user_id))
+                
+                #update debts
+                conn.commit()
+                cur.execute(""" SELECT * FROM friends """)
+                all_debts = cur.fetchall()
+                debt_map = {(row["friend1"], row["friend2"]): row["owes"] for row in all_debts}
+                #transfer debts where possible
+                transferred = True
+                while transferred:
+                    transferred = False
+                    keys = list(debt_map.keys())
+
+                    for (a, b) in keys:
+                        ab_owes = debt_map.get((a, b), 0.0)
+                        if ab_owes <= 0:
+                            continue
+                        for (x, c) in keys:
+                            if x != b:
+                                continue
+                            bc_owes = debt_map.get((b, c), 0.0)
+                            if bc_owes <= 0 or a == c:
+                                continue
+
+                            # Transferable amount is the minimum of A-B and B-C
+                            transfer_amount = min(ab_owes, bc_owes)
+
+                            # Update or insert A - C
+                            cur.execute("""
+                                INSERT INTO friends (friend1, friend2, owes)
+                                VALUES (%s, %s, %s)
+                                ON DUPLICATE KEY UPDATE owes = owes + %s
+                            """, (a, c, transfer_amount, transfer_amount))
+
+                            # Reduce A - B and B - C
+                            cur.execute("""
+                                UPDATE friends SET owes = owes - %s
+                                WHERE friend1 = %s AND friend2 = %s
+                            """, (transfer_amount, a, b))
+                            cur.execute("""
+                                UPDATE friends SET owes = owes - %s
+                                WHERE friend1 = %s AND friend2 = %s
+                            """, (transfer_amount, b, c))
+
+                            # Reflect changes in local debt_map
+                            debt_map[(a, b)] -= transfer_amount
+                            debt_map[(b, c)] -= transfer_amount
+                            debt_map[(a, c)] = debt_map.get((a, c), 0.0) + transfer_amount
+
+                            keys = list(debt_map.keys())
+                            transferred = True
                 conn.commit()
                 close_resources(conn, cur)
                 flash('Payment and debts logged successfully!', 'success')

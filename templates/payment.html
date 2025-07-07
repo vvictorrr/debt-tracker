@@ -51,9 +51,9 @@
                     <th>Paid On</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="payments-body">
                 {% for p in past_payments %}
-                    <tr>
+                    <tr class="payment-row">
                         <td>{{ p.paid_by }}</td>
                         <td>{{ p.total }}</td>
                         <td>{{ p.you_owed }}</td>
@@ -63,8 +63,12 @@
                 {% endfor %}
             </tbody>
         </table>
+        <div class="mt-3 d-flex justify-content-center gap-2">
+            <button type="button" id="show-more-payments" class="btn btn-outline-secondary btn-sm">Show More</button>
+            <button type="button" id="show-less-payments" class="btn btn-outline-secondary btn-sm">Show Less</button>
+        </div>
     {% else %}
-        <p>You have no incoming requests.</p>
+        <p>You have no past payments.</p>
     {% endif %}
 
 </div>

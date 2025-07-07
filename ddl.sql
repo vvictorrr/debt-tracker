@@ -34,6 +34,7 @@ CREATE TABLE friend_requests (
 CREATE TABLE friends (
     friend1 INT NOT NULL,
     friend2 INT NOT NULL,
+    owes FLOAT NOT NULL DEFAULT 0.0,
     CONSTRAINT friend1_users_fk FOREIGN KEY (friend1) REFERENCES users(id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT friend2_users_fk FOREIGN KEY (friend2) REFERENCES users(id)

@@ -13,6 +13,8 @@
                 <tr>
                     <th>Name</th>
                     <th>Username</th>
+                    <th>They Owe You</th>
+                    <th>You Owe</th>
                 </tr>
             </thead>
             <tbody>
@@ -20,6 +22,25 @@
                     <tr>
                         <td>{{ friend.name }}</td>
                         <td>{{ friend.username }}</td>
+                        <td>
+                            {{ friend.they_owe_you }}
+                            {% if friend.they_owe_you > 0 %}
+                                <form action="{{ url_for('forgive_debt') }}" method="post" class="d-inline d-flex mt-2 justify-content-center align-items-center gap-1">
+                                    <input type="hidden" name="friend_id" value="{{ friend.id }}">
+                                    <input type="number" name="amount" step="0.01" min="0" max="{{ friend.they_owe_you }}" class="form-control form-control-sm" style="width: 80px;" placeholder="Amount" required>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Forgive</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ friend.you_owe }}
+                            {% if friend.you_owe > 0 %}
+                                <form action="{{ url_for('pay_off') }}" method="post" class="d-inline">
+                                    <input type="hidden" name="friend_id" value="{{ friend.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-success ms-2">Pay Off</button>
+                                </form>
+                            {% endif %}
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
