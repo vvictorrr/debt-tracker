@@ -73,7 +73,7 @@ def login():
                     return redirect(url_for('dashboard'))
                 else:
                     flash("Invalid username or password", "danger")
-            except mysql.connector.Error as err:
+            except psycopg2.Error as err:
                 close_resources(conn, cur)
                 flash(str(err), "danger")
         else:
@@ -112,7 +112,7 @@ def register():
                 flash("Registered successfully. Please log in.", "success")
                 return redirect(url_for('login'))
 
-            except mysql.connector.Error as err:
+            except psycopg2.Error as err:
                 close_resources(conn, cur)
                 flash(str(err), "danger")
         else:
@@ -150,7 +150,7 @@ def dashboard():
 
             close_resources(conn, cur)
             return render_template("dashboard.html", friends=friends_list)
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             close_resources(conn, cur)
             flash(str(err), "danger")
     else:
@@ -177,7 +177,7 @@ def pay_off():
             conn.commit()
             close_resources(conn, cur)
             flash("Debt paid off!", "success")
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             flash(str(err), "danger")
             close_resources(conn, cur)
     else:
@@ -229,7 +229,7 @@ def forgive_debt():
                     conn.commit()
                     flash(f"Forgave ${min(current_owed, amount):.2f}.", "success")
 
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             flash(str(err), "danger")
         finally:
             close_resources(conn, cur)
@@ -262,7 +262,7 @@ def add():
             pending_list = cur.fetchall()
             close_resources(conn, cur)
             return render_template("add.html", pending=pending_list, incoming = incoming_list)
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             close_resources(conn, cur)
             flash(str(err), "danger")
     else:
@@ -304,7 +304,7 @@ def respond_request():
             close_resources(conn, cur)
 
 
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             close_resources(conn, cur)
             flash(str(err), "danger")
     else:
@@ -355,7 +355,7 @@ def send_friend_request():
             conn.commit()
             close_resources(conn, cur)
             flash("Friend request sent!", "success")
-        except mysql.connector.Error as err:
+        except psycopg2.Error as err:
             close_resources(conn, cur)
             flash(str(err), "danger")
     else:
@@ -397,7 +397,7 @@ def payment():
                 
                 past_payments = cur.fetchall()
                 close_resources(conn, cur)
-            except mysql.connector.Error as err:
+            except psycopg2.Error as err:
                 flash(str(err), 'danger')
                 friends = []
                 close_resources(conn, cur)
@@ -522,7 +522,7 @@ def payment():
                 conn.commit()
                 close_resources(conn, cur)
                 flash('Payment and debts logged successfully!', 'success')
-            except mysql.connector.Error as err:
+            except psycopg2.Error as err:
                 conn.rollback()
                 flash(str(err), 'danger')
                 close_resources(conn, cur)
