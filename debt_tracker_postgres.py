@@ -3,6 +3,8 @@ import psycopg2
 from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from dotenv import load_dotenv
+from psycopg2.extras import RealDictCursor
+
 
 load_dotenv()
 
@@ -138,7 +140,7 @@ def dashboard():
     conn = get_db_connection()
     if conn:
         try:
-            cur = conn.cursor(dictionary=True)
+            cur = cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("""
                 SELECT u.id, u.name, u.username, f1.owes AS you_owe, f2.owes AS they_owe_you
                     FROM users AS u
@@ -244,7 +246,7 @@ def add():
     conn = get_db_connection()
     if conn:
         try:
-            cur = conn.cursor(dictionary=True)
+            cur = conn.cursor(cursor_factory=RealDictCursor)
             #get incoming requests
 
             cur.execute("""
@@ -367,7 +369,8 @@ def payment():
     user_id = session.get('user_id')
     conn = get_db_connection()
     if conn:
-        cur = conn.cursor(dictionary=True)
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
 
         if request.method == 'GET':
             try:
@@ -499,7 +502,8 @@ def payment():
                             cur.execute("""
                                 INSERT INTO friends (friend1, friend2, owes)
                                 VALUES (%s, %s, %s)
-                                ON DUPLICATE KEY UPDATE owes = owes + %s
+                                ON CONFLICT (friend1, friend2)
+                                DO UPDATE SET owes = friends.owes + EXCLUDED.owes
                             """, (a, c, transfer_amount, transfer_amount))
 
                             # Reduce A - B and B - C
