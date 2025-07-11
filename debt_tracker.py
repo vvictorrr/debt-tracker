@@ -440,7 +440,8 @@ def payment():
                     (user_id, total, description)
                 )
                 conn.commit()
-                payment_id = cur.lastrowid
+                #payment_id = cur.lastrowid
+                payment_id = cur.fetchone()[0]
 
                 # Insert each debt record
                 for debtor_id, amount in debts:
