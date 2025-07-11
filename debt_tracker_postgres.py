@@ -429,13 +429,14 @@ def payment():
 
             try:
                 # Insert into payments
-                cur.execute(
-                    "INSERT INTO payments (paid_by, date_paid, total, description)"
-                    " VALUES (%s, NOW(), %s, %s)",
-                    (user_id, total, description)
-                )
+                cur.execute("""
+                    INSERT INTO payments (paid_by, date_paid, total, description)
+                        VALUES (%s, NOW(), %s, %s)
+                        RETURNING payment_id;
+                """, (user_id, total, description))
+                payment_id = cur.fetchone()[0]
                 conn.commit()
-                payment_id = cur.lastrowid
+                #payment_id = cur.lastrowid
 
                 # Insert each debt record
                 for debtor_id, amount in debts:
