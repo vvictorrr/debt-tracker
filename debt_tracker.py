@@ -485,6 +485,11 @@ def payment():
                             if bc_owes <= 0 or a == c:
                                 continue
 
+                            # Only transfer if A and C are friends
+                            cur.execute("SELECT 1 FROM friends WHERE friend1 = %s AND friend2 = %s", (a, c))
+                            if not cur.fetchone():
+                                continue
+
                             # Transferable amount is the minimum of A-B and B-C
                             transfer_amount = min(ab_owes, bc_owes)
 
