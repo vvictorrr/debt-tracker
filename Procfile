@@ -1,1 +1,1 @@
-web: gunicorn debt_tracker:app
+web: gunicorn debt_tracker_postgres:app
