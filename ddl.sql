@@ -63,3 +63,13 @@ CREATE TABLE debts (
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT debts_pk PRIMARY KEY (payment, debtor)
 );
+
+CREATE TABLE payment_logs (
+    log_id INT AUTO_INCREMENT NOT NULL,
+    done_by INT NOT NULL,
+    done_to INT NOT NULL,
+    amount INT DEFAULT NULL,
+    time_occurred DATETIME NOT NULL,
+    action_type VARCHAR(50) NOT NULL,
+    CONSTRAINT logs_pk PRIMARY KEY (log_id)
+);

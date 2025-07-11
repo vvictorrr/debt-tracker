@@ -1,5 +1,5 @@
 import os
-import mysql.connector
+import psycopg2
 from flask import Flask, flash, redirect, render_template, request, session, url_for, jsonify
 from flask_session import Session
 from dotenv import load_dotenv
@@ -27,13 +27,7 @@ def close_resources(conn, cur):
 def get_db_connection():
     """Connects to the MySQL database."""
     try:
-        conn = mysql.connector.connect(
-            host=os.getenv("MYSQL_HOST"),
-            port=os.getenv("MYSQL_PORT"),
-            user=os.getenv("MYSQL_USER"),
-            password=os.getenv("MYSQL_PASSWORD"),
-            database=os.getenv("MYSQL_DB")
-        )
+        conn = psycopg2.connect(os.getenv("DATABASE_URL"))
         return conn
     except Exception as e:
         print(f"Error connecting to database: {e}")
@@ -167,7 +161,6 @@ def dashboard():
 def pay_off():
     user_id = session.get("user_id")
     friend_id = request.form.get("friend_id")
-    amount = request.form.get("amount")
 
     conn = get_db_connection()
     if conn:
@@ -177,7 +170,6 @@ def pay_off():
                 UPDATE friends SET owes = 0
                 WHERE friend1 = %s AND friend2 = %s
             """, (user_id, friend_id))
-
             cur.execute("""
                 INSERT INTO payment_logs (done_by, done_to, amount, time_occurred, action_type) VALUES:
                 (%s, %s, %s, NOW(), 'pay_off');
