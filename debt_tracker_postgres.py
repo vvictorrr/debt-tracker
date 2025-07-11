@@ -434,7 +434,7 @@ def payment():
                         VALUES (%s, NOW(), %s, %s)
                         RETURNING payment_id;
                 """, (user_id, total, description))
-                payment_id = cur.fetchone()[0]
+                payment_id = cur.fetchone()["payment_id"]
                 conn.commit()
                 #payment_id = cur.lastrowid
 
