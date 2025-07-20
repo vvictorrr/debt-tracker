@@ -163,6 +163,7 @@ def dashboard():
 def pay_off():
     user_id = session.get("user_id")
     friend_id = request.form.get("friend_id")
+    amount = request.form.get("amount")
 
     conn = get_db_connection()
     if conn:
@@ -519,7 +520,7 @@ def payment():
                                 VALUES (%s, %s, %s)
                                 ON CONFLICT (friend1, friend2)
                                 DO UPDATE SET owes = friends.owes + EXCLUDED.owes
-                            """, (a, c, transfer_amount, transfer_amount))
+                            """, (a, c, transfer_amount))
 
                             # Reduce A - B and B - C
                             cur.execute("""
