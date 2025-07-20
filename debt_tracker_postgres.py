@@ -163,7 +163,7 @@ def dashboard():
 def pay_off():
     user_id = session.get("user_id")
     friend_id = request.form.get("friend_id")
-    amount = request.form.get("amount")
+    amount = float(request.form.get("amount"))
 
     conn = get_db_connection()
     if conn:

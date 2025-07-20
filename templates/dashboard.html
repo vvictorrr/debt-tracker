@@ -23,7 +23,7 @@
                         <td>{{ friend.name }}</td>
                         <td>{{ friend.username }}</td>
                         <td>
-                            {{ friend.they_owe_you }}
+                            {{ friend.they_owe_you | round(2) }}
                             {% if friend.they_owe_you > 0 %}
                                 <form action="{{ url_for('forgive_debt') }}" method="post" class="d-inline d-flex mt-2 justify-content-center align-items-center gap-1">
                                     <input type="hidden" name="friend_id" value="{{ friend.id }}">
@@ -33,7 +33,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {{ friend.you_owe }}
+                            {{ friend.you_owe | round(2) }}
                             {% if friend.you_owe > 0 %}
                                 <form action="{{ url_for('pay_off') }}" method="post" class="d-inline">
                                     <input type="hidden" name="friend_id" value="{{ friend.id }}">
