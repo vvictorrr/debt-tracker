@@ -173,7 +173,7 @@ def pay_off():
                 WHERE friend1 = %s AND friend2 = %s
             """, (user_id, friend_id))
             cur.execute("""
-                INSERT INTO payment_logs (done_by, done_to, amount, time_occurred, action_type) VALUES:
+                INSERT INTO payment_logs (done_by, done_to, amount, time_occurred, action_type) VALUES
                 (%s, %s, %s, NOW(), 'pay_off');
             """, (user_id, friend_id, amount))
             conn.commit()
@@ -225,7 +225,7 @@ def forgive_debt():
                         WHERE friend1 = %s AND friend2 = %s
                     """, (new_amount, friend_id, user_id))
                     cur.execute("""
-                        INSERT INTO payment_logs (done_by, done_to, amount, time_occurred, action_type) VALUES:
+                        INSERT INTO payment_logs (done_by, done_to, amount, time_occurred, action_type) VALUES
                         (%s, %s, %s, NOW(), 'forgive');
                     """, (user_id, friend_id, amount))
                     conn.commit()
