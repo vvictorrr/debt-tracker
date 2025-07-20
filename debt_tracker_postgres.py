@@ -454,27 +454,28 @@ def payment():
                 #cancel overlapping
                 for debtor_id, amount in debts:
                     user_owes = debt_map.get((user_id, debtor_id), 0.0)
-                    friend_owes_user = debt_map.get((debtor_id, user_id), 0.0)
+                    debtor_owes_user = debt_map.get((debtor_id, user_id), 0.0)
 
                     if user_owes >= amount:
-                        # User owed debtor, cancel it out
+                        # Cancel the full amount from user's debt to debtor
                         cur.execute("""
-                            UPDATE friends SET owes = owes - %s
+                            UPDATE friends
+                            SET owes = owes - %s
                             WHERE friend1 = %s AND friend2 = %s
                         """, (amount, user_id, debtor_id))
                     else:
-                        # Cancel out whatever user owed debtor (if anything)
+                        # Cancel out as much as possible, and then record the remaining
                         cancel_amount = min(user_owes, amount)
                         remaining = amount - cancel_amount
 
-                        # Set user’s debt to debtor to 0
                         if cancel_amount > 0:
                             cur.execute("""
-                                UPDATE friends SET owes = owes - %s
+                                UPDATE friends
+                                SET owes = owes - %s
                                 WHERE friend1 = %s AND friend2 = %s
                             """, (cancel_amount, user_id, debtor_id))
 
-                        # Add remaining to debtor’s debt to user
+                        # Now add the remaining debt to debtor → user
                         cur.execute("""
                             INSERT INTO friends (friend1, friend2, owes)
                             VALUES (%s, %s, %s)
