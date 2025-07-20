@@ -454,20 +454,33 @@ def payment():
                 #cancel overlapping
                 for debtor_id, amount in debts:
                     user_owes = debt_map.get((user_id, debtor_id), 0.0)
+                    friend_owes_user = debt_map.get((debtor_id, user_id), 0.0)
+
                     if user_owes >= amount:
+                        # User owed debtor, cancel it out
                         cur.execute("""
-                            UPDATE friends SET owes = %s
+                            UPDATE friends SET owes = owes - %s
                             WHERE friend1 = %s AND friend2 = %s
-                        """, (user_owes - amount, user_id, debtor_id))
+                        """, (amount, user_id, debtor_id))
                     else:
+                        # Cancel out whatever user owed debtor (if anything)
+                        cancel_amount = min(user_owes, amount)
+                        remaining = amount - cancel_amount
+
+                        # Set user’s debt to debtor to 0
+                        if cancel_amount > 0:
+                            cur.execute("""
+                                UPDATE friends SET owes = owes - %s
+                                WHERE friend1 = %s AND friend2 = %s
+                            """, (cancel_amount, user_id, debtor_id))
+
+                        # Add remaining to debtor’s debt to user
                         cur.execute("""
-                            UPDATE friends SET owes = %s
-                            WHERE friend1 = %s AND friend2 = %s
-                        """, (0.0, user_id, debtor_id))
-                        cur.execute("""
-                            UPDATE friends SET owes = %s
-                            WHERE friend1 = %s AND friend2 = %s
-                        """, (amount - user_owes, debtor_id, user_id))
+                            INSERT INTO friends (friend1, friend2, owes)
+                            VALUES (%s, %s, %s)
+                            ON CONFLICT (friend1, friend2)
+                            DO UPDATE SET owes = friends.owes + EXCLUDED.owes
+                        """, (debtor_id, user_id, remaining))
                 
                 #update debts
                 conn.commit()
