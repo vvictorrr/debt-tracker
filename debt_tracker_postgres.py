@@ -448,48 +448,38 @@ def payment():
 
                 #debtor OWES payer
                 #Update running debts
-                cur.execute(""" SELECT * FROM friends """)
+                cur.execute("SELECT * FROM friends")
                 all_debts = cur.fetchall()
                 debt_map = {(row["friend1"], row["friend2"]): row["owes"] for row in all_debts}
 
-                #cancel overlapping
+                # Update debts between payer and each debtor
                 for debtor_id, amount in debts:
                     user_owes = debt_map.get((user_id, debtor_id), 0.0)
-                    debtor_owes_user = debt_map.get((debtor_id, user_id), 0.0)
+                    cancel_amount = min(user_owes, amount)
+                    remaining = amount - cancel_amount
 
-                    if user_owes >= amount:
-                        # Cancel the full amount from user's debt to debtor
+                    if cancel_amount > 0:
                         cur.execute("""
                             UPDATE friends
-                            SET owes = owes - %s
+                            SET owes = GREATEST(0, owes - %s)
                             WHERE friend1 = %s AND friend2 = %s
-                        """, (amount, user_id, debtor_id))
-                    else:
-                        # Cancel out as much as possible, and then record the remaining
-                        cancel_amount = min(user_owes, amount)
-                        remaining = amount - cancel_amount
+                        """, (cancel_amount, user_id, debtor_id))
 
-                        if cancel_amount > 0:
-                            cur.execute("""
-                                UPDATE friends
-                                SET owes = owes - %s
-                                WHERE friend1 = %s AND friend2 = %s
-                            """, (cancel_amount, user_id, debtor_id))
-
-                        # Now add the remaining debt to debtor → user
+                    if remaining > 0:
                         cur.execute("""
                             INSERT INTO friends (friend1, friend2, owes)
                             VALUES (%s, %s, %s)
                             ON CONFLICT (friend1, friend2)
-                            DO UPDATE SET owes = friends.owes + EXCLUDED.owes
+                            DO UPDATE SET owes = GREATEST(0, friends.owes + EXCLUDED.owes)
                         """, (debtor_id, user_id, remaining))
-                
-                #update debts
+
+                # Refresh map after direct updates
                 conn.commit()
-                cur.execute(""" SELECT * FROM friends """)
+                cur.execute("SELECT * FROM friends")
                 all_debts = cur.fetchall()
                 debt_map = {(row["friend1"], row["friend2"]): row["owes"] for row in all_debts}
-                #transfer debts where possible
+
+                # Transfer debts where possible
                 transferred = True
                 while transferred:
                     transferred = False
@@ -500,45 +490,46 @@ def payment():
                         if ab_owes <= 0:
                             continue
                         for (x, c) in keys:
-                            if x != b:
+                            if x != b or a == c:
                                 continue
                             bc_owes = debt_map.get((b, c), 0.0)
-                            if bc_owes <= 0 or a == c:
+                            if bc_owes <= 0:
                                 continue
 
-                            # Only transfer if A and C are friends
+                            # Ensure A and C have a relationship
                             cur.execute("SELECT 1 FROM friends WHERE friend1 = %s AND friend2 = %s", (a, c))
                             if not cur.fetchone():
                                 continue
 
-                            # Transferable amount is the minimum of A-B and B-C
                             transfer_amount = min(ab_owes, bc_owes)
+                            if transfer_amount <= 0:
+                                continue
 
-                            # Update or insert A - C
+                            # A now owes C directly
                             cur.execute("""
                                 INSERT INTO friends (friend1, friend2, owes)
                                 VALUES (%s, %s, %s)
                                 ON CONFLICT (friend1, friend2)
-                                DO UPDATE SET owes = friends.owes + EXCLUDED.owes
+                                DO UPDATE SET owes = GREATEST(0, friends.owes + EXCLUDED.owes)
                             """, (a, c, transfer_amount))
 
-                            # Reduce A - B and B - C
+                            # Reduce A→B and B→C
                             cur.execute("""
-                                UPDATE friends SET owes = owes - %s
+                                UPDATE friends SET owes = GREATEST(0, owes - %s)
                                 WHERE friend1 = %s AND friend2 = %s
                             """, (transfer_amount, a, b))
                             cur.execute("""
-                                UPDATE friends SET owes = owes - %s
+                                UPDATE friends SET owes = GREATEST(0, owes - %s)
                                 WHERE friend1 = %s AND friend2 = %s
                             """, (transfer_amount, b, c))
 
-                            # Reflect changes in local debt_map
-                            debt_map[(a, b)] -= transfer_amount
-                            debt_map[(b, c)] -= transfer_amount
+                            # Update local map
+                            debt_map[(a, b)] = max(0.0, debt_map.get((a, b), 0.0) - transfer_amount)
+                            debt_map[(b, c)] = max(0.0, debt_map.get((b, c), 0.0) - transfer_amount)
                             debt_map[(a, c)] = debt_map.get((a, c), 0.0) + transfer_amount
 
-                            keys = list(debt_map.keys())
                             transferred = True
+
                 conn.commit()
                 close_resources(conn, cur)
                 flash('Payment and debts logged successfully!', 'success')
