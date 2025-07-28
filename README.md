@@ -27,7 +27,6 @@ With cancellation, Alice owes Bob $5, Charlie owes Alice $10, and Charlie owes B
 With transferrals, Charlie owes Alice $5, and Charlie owes Bob $30. What were four payments have been reduced to two.<br>
 While this may not seem like much of a difference, these debt networks can rapidly become extremely complicated and difficult to track.
 If payments were always made immediately, the fees from services such as PayPal can gradually build up in very small increments and lead to large financial losses.
----
 
 ## Experimental Insights
 
