@@ -76,3 +76,12 @@ What were 30 payments have become 3. However, one of these 3 payments was 8 cent
 Thus, 30 payments became 2.
 
 The total PayPal fees avoided come out to $17.57. Over a year, assuming 52 weeks in a year, $913.64 could potentially be avoided.
+
+## Workflow
+
+- I first began by brainstorming what features I wanted the app to have. Debt simplification was, of course, the main goal, but I would also need methods to add friends, send friend requests, log in, and forgive/make payments to reduce your debt.
+- Then, I designed my database in LucidChart. The prototypes are visible below.
+- I programmed all basic requirements and ensured the app was working.
+- I initially designed my app using MySQL, but I later discovered that Render, the service I planned on using to launch the app, could only use PostgreSQL for free. I then pivoted and made a copy of the DDL and Flask app that was programmed to PostgreSQL syntax.
+- I deployed the app on Render and had a week of vacation with my friends, none of us having to send each other money.
+- At the end of the week, everyone could individually see who they owed and who owed them what. 
