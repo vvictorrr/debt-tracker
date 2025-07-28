@@ -55,7 +55,7 @@ For the sake of privacy, there are no names but user IDs as logged by the databa
   <img src="images/paypal_fees_avoided.png" alt="PayPal Fees Avoided" width="500"/>
 </div>
 
-Paypal charges a %2.9 + $0.3 fee for each payment sent to another person. This chart shows how much each person avoided paying.
+Paypal charges a %2.9 + $0.30 fee for each payment sent to another person. This chart shows how much each person avoided paying.
 
 ### Would-be PayPal Losses for Creditors
 
@@ -91,4 +91,13 @@ The total PayPal fees avoided come out to $17.57. Over a year, assuming 52 weeks
 - I programmed all basic requirements and ensured the app was working.
 - I initially designed my app using MySQL, but I later discovered that Render, the service I planned on using to launch the app, could only use PostgreSQL for free. I then pivoted and made a copy of the DDL and Flask app that was programmed to PostgreSQL syntax.
 - I deployed the app on Render and had a week of vacation with my friends, none of us having to send each other money.
-- At the end of the week, everyone could individually see who they owed and who owed them what. 
+- At the end of the week, everyone could individually see who they owed and who owed them what.
+
+## Technologies Used
+
+- **Frontend**: HTML, CSS, JavaScript
+- **Backend**: Python (Flask)
+- **Database**: PostgreSQL (formerly MySQL)
+- **ORM / Querying**: psycopg2
+- **Data Analysis**: pandas, seaborn, matplotlib
+- **Hosting**: Render
