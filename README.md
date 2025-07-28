@@ -87,6 +87,7 @@ The total PayPal fees avoided come out to $17.57. Over a year, assuming 52 weeks
 <div align="center">
   <img src="images/debt_tracker_RDB.png" alt="RDB Scheme" width="500"/>
 </div>
+
 - I programmed all basic requirements and ensured the app was working.
 - I initially designed my app using MySQL, but I later discovered that Render, the service I planned on using to launch the app, could only use PostgreSQL for free. I then pivoted and made a copy of the DDL and Flask app that was programmed to PostgreSQL syntax.
 - I deployed the app on Render and had a week of vacation with my friends, none of us having to send each other money.
