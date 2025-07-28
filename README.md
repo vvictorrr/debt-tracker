@@ -46,7 +46,7 @@ This shows the distribution of payments by category. Over time, more categories 
   <img src="images/total_paid_by_user_pie.png" alt="Total Paid by Each User" width="400"/>
 </div>
 
-A total of $571.69 was spent between the four of us. This chart shows made the most payments and thus accrued the most credit (having the most amount of people owe them)
+A total of $571.69 was spent between the four of us. This chart shows who made the most payments and thus accrued the most credit (having the most amount of people owe them)
 For the sake of privacy, there are no names but user IDs as logged by the database.
 
 ### Potential PayPal Fees Avoided by Each Debtor
