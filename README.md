@@ -38,7 +38,7 @@ I tested this app with my four friends for a week, and these are the results.
   <img src="experiment_results/category_breakdown_pie.png" alt="Payments by Category" width="400"/>
 </div>
 
-This shows the distribution of payments by category. Over time, more categories could be added, but these food and recreation were identified as the clear two categories over this week.
+This shows the distribution of payments by category. Over time, more categories could be added, but food and recreation were identified as the clear two categories over this week.
 
 ### Total Paid by Each User (Total Volume: $571.69)
 
