@@ -35,7 +35,7 @@ I tested this app with my four friends for a week, and these are the results.
 ### Payments by Category (Total: 14)
 
 <div align="center">
-  <img src="experiment_results/category_breakdown_pie.png" alt="Payments by Category" width="400"/>
+  <img src="images/category_breakdown_pie.png" alt="Payments by Category" width="400"/>
 </div>
 
 This shows the distribution of payments by category. Over time, more categories could be added, but food and recreation were identified as the clear two categories over this week.
@@ -43,7 +43,7 @@ This shows the distribution of payments by category. Over time, more categories 
 ### Total Paid by Each User (Total Volume: $571.69)
 
 <div align="center">
-  <img src="experiment_results/total_paid_by_user_pie.png" alt="Total Paid by Each User" width="400"/>
+  <img src="images/total_paid_by_user_pie.png" alt="Total Paid by Each User" width="400"/>
 </div>
 
 A total of $571.69 was spent between the four of us. This chart shows made the most payments and thus accrued the most credit (having the most amount of people owe them)
@@ -52,7 +52,7 @@ For the sake of privacy, there are no names but user IDs as logged by the databa
 ### Potential PayPal Fees Avoided by Each Debtor
 
 <div align="center">
-  <img src="experiment_results/paypal_fees_avoided.png" alt="PayPal Fees Avoided" width="500"/>
+  <img src="images/paypal_fees_avoided.png" alt="PayPal Fees Avoided" width="500"/>
 </div>
 
 Paypal charges a %2.9 + $0.3 fee for each payment sent to another person. This chart shows how much each person avoided paying.
@@ -60,7 +60,7 @@ Paypal charges a %2.9 + $0.3 fee for each payment sent to another person. This c
 ### Would-be PayPal Losses for Creditors
 
 <div align="center">
-  <img src="experiment_results/net_received_and_loss.png" alt="Net Received and Loss" width="500"/>
+  <img src="images/net_received_and_loss.png" alt="Net Received and Loss" width="500"/>
 </div>
 
 Paypal also charges a %1.5 fee to transfer money to your bank account. This chart shows how much each person avoided losing.
@@ -68,7 +68,7 @@ Paypal also charges a %1.5 fee to transfer money to your bank account. This char
 ### Payment Simplification
 
 <div align="center">
-  <img src="experiment_results/debt_simplification.png" alt="Net Received and Loss" width="500"/>
+  <img src="images/debt_simplification.png" alt="Net Received and Loss" width="500"/>
 </div>
 
 This chart shows the before and afters for the amount of payments needed to be made to pay off all debts.
@@ -80,7 +80,13 @@ The total PayPal fees avoided come out to $17.57. Over a year, assuming 52 weeks
 ## Workflow
 
 - I first began by brainstorming what features I wanted the app to have. Debt simplification was, of course, the main goal, but I would also need methods to add friends, send friend requests, log in, and forgive/make payments to reduce your debt.
-- Then, I designed my database in LucidChart. The prototypes are visible below.
+- Then, I modeled a UML class diagram and RDB (Relational Database) Scheme in LucidChart. The diagrams are visible below.
+<div align="center">
+  <img src="images/debt_tracker_UML.png" alt="Net Received and Loss" width="500"/>
+</div>
+<div align="center">
+  <img src="images/debt_tracker_RDB.png" alt="Net Received and Loss" width="500"/>
+</div>
 - I programmed all basic requirements and ensured the app was working.
 - I initially designed my app using MySQL, but I later discovered that Render, the service I planned on using to launch the app, could only use PostgreSQL for free. I then pivoted and made a copy of the DDL and Flask app that was programmed to PostgreSQL syntax.
 - I deployed the app on Render and had a week of vacation with my friends, none of us having to send each other money.
