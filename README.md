@@ -82,10 +82,10 @@ The total PayPal fees avoided come out to $17.57. Over a year, assuming 52 weeks
 - I first began by brainstorming what features I wanted the app to have. Debt simplification was, of course, the main goal, but I would also need methods to add friends, send friend requests, log in, and forgive/make payments to reduce your debt.
 - Then, I modeled a UML class diagram and RDB (Relational Database) Scheme in LucidChart. The diagrams are visible below.
 <div align="center">
-  <img src="images/debt_tracker_UML.pdf" alt="UML class diagram" width="500"/>
+  <img src="images/debt_tracker_UML.png" alt="UML class diagram" width="500"/>
 </div>
 <div align="center">
-  <img src="images/debt_tracker_RDB.pdf" alt="RDB Scheme" width="500"/>
+  <img src="images/debt_tracker_RDB.png" alt="RDB Scheme" width="500"/>
 </div>
 - I programmed all basic requirements and ensured the app was working.
 - I initially designed my app using MySQL, but I later discovered that Render, the service I planned on using to launch the app, could only use PostgreSQL for free. I then pivoted and made a copy of the DDL and Flask app that was programmed to PostgreSQL syntax.
