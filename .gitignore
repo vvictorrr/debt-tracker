@@ -4,3 +4,4 @@ flask_session/
 __pycache__/    
 venv/
 experiment_results/debt_solution.py
+.DS_Store
