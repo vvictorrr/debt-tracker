@@ -11,7 +11,6 @@ from dotenv import load_dotenv
 
 
 env_path = Path(__file__).resolve().parent.parent / '.env'  # Goes up 2 folders
-print(env_path)
 load_dotenv(env_path)
 
 def close_resources(conn, cur):

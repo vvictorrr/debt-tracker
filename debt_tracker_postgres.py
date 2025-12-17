@@ -27,7 +27,7 @@ def close_resources(conn, cur):
         conn.close()
 
 def get_db_connection():
-    """Connects to the MySQL database."""
+    """Connects to the PostgreSQL database."""
     try:
         conn = psycopg2.connect(os.getenv("DATABASE_URL"))
         return conn
@@ -43,12 +43,12 @@ def test_connection():
             cur.execute('SELECT VERSION();')
             db_version = cur.fetchone()
             close_resources(conn, cur)
-            return jsonify({"message": "MySQL connection successful!", "version": db_version})
+            return jsonify({"message": "PostgreSQL connection successful!", "version": db_version})
         except Exception as e:
             close_resources(conn, None)
-            return jsonify({"error": f"MySQL query failed: {e}"}), 500
+            return jsonify({"error": f"PostgreSQL query failed: {e}"}), 500
     else:
-        return jsonify({"error": "Could not connect to MySQL"}), 500
+        return jsonify({"error": "Could not connect to PostgreSQL"}), 500
 
 @app.route('/')
 def index():
@@ -140,7 +140,7 @@ def dashboard():
     conn = get_db_connection()
     if conn:
         try:
-            cur = cur = conn.cursor(cursor_factory=RealDictCursor)
+            cur = conn.cursor(cursor_factory=RealDictCursor)
             cur.execute("""
                 SELECT u.id, u.name, u.username, f1.owes AS you_owe, f2.owes AS they_owe_you
                     FROM users AS u
@@ -529,7 +529,6 @@ def payment():
                             debt_map[(a, c)] = debt_map.get((a, c), 0.0) + transfer_amount
 
                             transferred = True
-
                 conn.commit()
                 close_resources(conn, cur)
                 flash('Payment and debts logged successfully!', 'success')
@@ -543,6 +542,22 @@ def payment():
             return 'Method Not Allowed', 405
     else:
         flash('Database connection failed', 'danger')
+
+@app.context_processor
+def inject_user():
+    user_id = session.get("user_id")
+    if user_id:
+        conn = get_db_connection()
+        if conn:
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT name, username FROM users WHERE id = %s", (user_id,))
+                user_info = cur.fetchone()
+                close_resources(conn, cur)
+                return {'user_info': user_info}  # tuple (name, username)
+            except:
+                close_resources(conn, cur)
+    return {'user_info': None}
 
 if __name__ == '__main__':
     app.run(debug=True)
