@@ -97,7 +97,7 @@ The total PayPal fees avoided come out to $17.57. Over a year, assuming 52 weeks
 
 - **Frontend**: HTML, CSS, JavaScript
 - **Backend**: Python (Flask)
-- **Database**: PostgreSQL (formerly MySQL)
+- **Database**: PostgreSQL (initially MySQL)
 - **ORM / Querying**: psycopg2
 - **Data Analysis**: pandas, seaborn, matplotlib
 - **Hosting**: Render
